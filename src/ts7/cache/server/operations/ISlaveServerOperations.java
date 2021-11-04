@@ -1,10 +1,8 @@
 package ts7.cache.server.operations;
 
-import java.net.InetAddress;
-
 public interface ISlaveServerOperations {
 
-  boolean storeObject(Object objToStoreInMemoryDataStructure);
+  boolean storeObject(String key,Object objToStoreInMemoryDataStructure);
 
-  void pingMasterServer(InetAddress masterServerAddress);
+  void pingMasterServer(String server,int port,String message);
 }
