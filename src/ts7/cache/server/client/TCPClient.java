@@ -7,7 +7,6 @@ import java.io.IOException;
 // Client class
 public class TCPClient {
   public static void main(String[] args) throws IOException {
-    Utility.talktoAnotherServer("localhost",8001,"Time");
-    Utility.talktoAnotherServer("localhost",8000,"Store");
+    Utility.talktoAnotherServer("localhost",8000,"Store$Allah$ServantofAllah,Thameemuddin R");
   }
 }

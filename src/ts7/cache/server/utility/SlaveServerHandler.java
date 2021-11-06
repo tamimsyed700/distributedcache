@@ -1,14 +1,12 @@
 package ts7.cache.server.utility;
 
-import ts7.cache.server.MasterServer;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 // ClientHandler class
 public class SlaveServerHandler extends Thread
@@ -16,13 +14,15 @@ public class SlaveServerHandler extends Thread
   final DataInputStream dis;
   final DataOutputStream dos;
   final Socket s;
+  final Map<String,Object> storeKeysAndObject;
 
   // Constructor
-  public SlaveServerHandler(Socket s, DataInputStream dis, DataOutputStream dos)
+  public SlaveServerHandler(Socket s, DataInputStream dis, DataOutputStream dos, Map<String, Object> storeKeysAndObject)
   {
     this.s = s;
     this.dis = dis;
     this.dos = dos;
+    this.storeKeysAndObject = storeKeysAndObject;
   }
 
   @Override
@@ -43,10 +43,12 @@ public class SlaveServerHandler extends Thread
         // write on output stream based on the
         // answer from the client
         if (received!=null && received.startsWith("Store")){
-          System.out.println("AT the master server RECEIVING THIS "+received+" FROM CLIENT");
-          String extractNodeHostname=received.substring(received.indexOf("$")+1);
-          MasterServer.nodesAddressList.add(extractNodeHostname);
-          dos.writeUTF("IP address : "+extractNodeHostname);
+          System.out.println("AT the slave server RECEIVING THIS "+received+" FROM CLIENT");
+          String[] splitString =received.split(Pattern.quote("$"));
+          System.out.println("Key : "+splitString[0]);
+          System.out.println("Value : "+splitString[1]);
+          storeKeysAndObject.put(splitString[0],splitString[1]);
+          dos.writeUTF("Done on the client for storing the key "+splitString[0]);
         }
         else {
           dos.writeUTF("Master Invalid input");

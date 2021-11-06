@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 // ClientHandler class
 public class MasterServerHandler extends Thread
@@ -47,15 +48,34 @@ public class MasterServerHandler extends Thread
         }
         else if (received!=null && received.startsWith("Store")){
           System.out.println("AT the master server RECEIVING THIS "+received+" FROM CLIENT");
-          Utility.talktoAnotherServer(SlaveServer.MASTER_SERVER,SlaveServer.MASTER_PORT,received);
+          String[] splitString =received.split(Pattern.quote("$"));
+          long keyCRC = Utility.crc64Long(splitString[1]);
+          System.out.println("keyCRC "+keyCRC);
+          int nodeIndex = (int)(keyCRC % (MasterServer.nodesAddressList.stream().count()));
+          nodeIndex=Math.abs(nodeIndex);
+          System.out.println("nodeIndex "+nodeIndex);
+          //Compute the instance to use to store the keys.
+          String getNodeAddresstoStore = MasterServer.nodesAddressList.get(nodeIndex);
+          System.out.println("getNodeAddresstoStore "+getNodeAddresstoStore);
+          String address[] = getNodeAddresstoStore.split(Pattern.quote(":"));
+          System.out.println("IP "+address[0]);
+          int port = Integer.parseInt(address[1]);
+          System.out.println("port "+port);
+          dos.writeUTF("Done with the store at the master");
+          new Thread(()->Utility.talktoAnotherServer(address[0],port,received)).start();
 //          String[] extractValues = received.split("$");
 //          if(extractValues!=null && extractValues.length>2){
 //            String key = extractValues[1];
 //            String value=extractValues[2];
 //          }
-          String extractNodeHostname=received.substring(received.indexOf("$")+1);
-          MasterServer.nodesAddressList.add(extractNodeHostname);
-          dos.writeUTF("IP address : "+extractNodeHostname);
+//          String extractNodeHostname=received.substring(received.indexOf("$")+1);
+//          MasterServer.nodesAddressList.add(extractNodeHostname);
+        }
+        else if (received!=null && received.startsWith("ListSlaves")){
+            System.out.println("AT the master server RECEIVING THIS "+received+" FROM CLIENT");
+            StringBuffer stringBuffer = new StringBuffer();
+            MasterServer.nodesAddressList.stream().forEach(e->stringBuffer.append("Slaves are : "+e+"\n"));
+            dos.writeUTF(stringBuffer.toString());
         }
         else {
           dos.writeUTF("Master Invalid input");

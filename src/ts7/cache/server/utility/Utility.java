@@ -1,7 +1,6 @@
 package ts7.cache.server.utility;
 
 import ts7.cache.server.MasterServerHandler;
-import ts7.cache.server.SlaveServer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,6 +8,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Utility {
@@ -51,17 +51,17 @@ public class Utility {
     }
   }
 
-  public static void startCacheServer(int serverType, int port) throws IOException {
+  public void startCacheServer(int serverType, int port, Map<String,Object> storeKeysAndObject) throws IOException {
     // server is listening on port 5056
     ServerSocket ss = new ServerSocket(port);
     // running infinite loop for getting
     // client request
     while (true) {
       if (serverType==2) {
-        System.out.println("Slave server started....");
-        String sendMessage ="DiscoverMe$localhost:"+port;
-        System.out.println("Message sent : "+sendMessage);
-       // Utility.talktoAnotherServer(SlaveServer.MASTER_SERVER,SlaveServer.MASTER_PORT,sendMessage);
+//        System.out.println("Slave server started....");
+//        String sendMessage ="DiscoverMe$localhost:"+port;
+//        System.out.println("Message sent : "+sendMessage);
+//        Utility.talktoAnotherServer(SlaveServer.MASTER_SERVER,SlaveServer.MASTER_PORT,sendMessage);
       }
       else if (serverType==1)
         System.out.println("Master server started....");
@@ -81,7 +81,7 @@ public class Utility {
           t.start();
         }
         else if (serverType==2) {
-          Thread t = new SlaveServerHandler(s, dis, dos);
+          Thread t = new SlaveServerHandler(s, dis, dos,storeKeysAndObject);
           t.start();
         }
       }
@@ -90,5 +90,39 @@ public class Utility {
         e.printStackTrace();
       }
     }
+  }
+
+  private static boolean init = false;
+  private static long[] CRCTable = new long[256];
+  private static final long POLY64REV = 0x95AC9329AC4BC9B5L;
+  private static final long INITIALCRC = 0xFFFFFFFFFFFFFFFFL;
+
+  public static final long crc64Long(String in) {
+    if (in == null || in.length() == 0) {
+      return 0;
+    }
+    // http://bioinf.cs.ucl.ac.uk/downloads/crc64/crc64.c
+    long crc = INITIALCRC, part;
+    if (!init) {
+      for (int i = 0; i < 256; i++) {
+        part = i;
+        for (int j = 0; j < 8; j++) {
+          int value = ((int) part & 1);
+          if (value != 0) {
+            part = (part >> 1) ^ POLY64REV;
+          } else {
+            part >>= 1;
+          }
+        }
+        CRCTable[i] = part;
+      }
+      init = true;
+    }
+    int length = in.length();
+    for (int k = 0; k < length; ++k) {
+      char c = in.charAt(k);
+      crc = CRCTable[(((int) crc) ^ c) & 0xff] ^ (crc >> 8);
+    }
+    return crc;
   }
 }

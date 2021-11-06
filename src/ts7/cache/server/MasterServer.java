@@ -14,7 +14,7 @@ public class MasterServer implements IMasterServerOperations {
   public static final List<String> nodesAddressList = new ArrayList<>();
 
   public static void main(String[] args) throws IOException {
-    Utility.startCacheServer(1,PORT);
+    new Utility().startCacheServer(1,PORT,null);
   }
 
   @Override
