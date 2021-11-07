@@ -77,7 +77,7 @@ public class Utility {
         System.out.println("Assigning new thread for this client");
         // create a new thread object
         if (serverType==1) {
-          Thread t = new MasterServerHandler(s, dis, dos);
+          Thread t = new MasterServerHandler(s, dis, dos,storeKeysAndObject);
           t.start();
         }
         else if (serverType==2) {

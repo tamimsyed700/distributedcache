@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Date;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 // ClientHandler class
@@ -15,13 +16,15 @@ public class MasterServerHandler extends Thread
   final DataInputStream dis;
   final DataOutputStream dos;
   final Socket s;
+  private Map<String, Object> storeKeysAndObject;
 
   // Constructor
-  public MasterServerHandler(Socket s, DataInputStream dis, DataOutputStream dos)
+  public MasterServerHandler(Socket s, DataInputStream dis, DataOutputStream dos, Map<String, Object> storeKeysAndObject)
   {
     this.s = s;
     this.dis = dis;
     this.dos = dos;
+    this.storeKeysAndObject = storeKeysAndObject;
   }
 
   @Override
@@ -46,6 +49,16 @@ public class MasterServerHandler extends Thread
           MasterServer.nodesAddressList.add(extractNodeHostname);
           dos.writeUTF("IP address : "+extractNodeHostname);
         }
+        else if (received!=null && received.startsWith("GetKey")){
+          System.out.println("AT the master server RECEIVING THIS "+received+" FROM CLIENT");
+          String[] splitString =received.split(Pattern.quote("$"));
+          if (this.storeKeysAndObject.containsKey(splitString[1])) {
+            String ipaddresstoConnect = (String)storeKeysAndObject.get(splitString[1]);
+            String[] ip = ipaddresstoConnect.split(Pattern.quote(":"));
+            int port = Integer.parseInt(ip[1]);
+            new Thread(()->Utility.talktoAnotherServer(ip[0],port,received)).start();
+          }
+        }
         else if (received!=null && received.startsWith("Store")){
           System.out.println("AT the master server RECEIVING THIS "+received+" FROM CLIENT");
           String[] splitString =received.split(Pattern.quote("$"));
@@ -63,6 +76,8 @@ public class MasterServerHandler extends Thread
           System.out.println("port "+port);
           dos.writeUTF("Done with the store at the master");
           new Thread(()->Utility.talktoAnotherServer(address[0],port,received)).start();
+          System.out.println("Key "+splitString[1]+" added to the "+getNodeAddresstoStore);
+          storeKeysAndObject.put(splitString[1],getNodeAddresstoStore);
 //          String[] extractValues = received.split("$");
 //          if(extractValues!=null && extractValues.length>2){
 //            String key = extractValues[1];

@@ -45,10 +45,17 @@ public class SlaveServerHandler extends Thread
         if (received!=null && received.startsWith("Store")){
           System.out.println("AT the slave server RECEIVING THIS "+received+" FROM CLIENT");
           String[] splitString =received.split(Pattern.quote("$"));
-          System.out.println("Key : "+splitString[0]);
-          System.out.println("Value : "+splitString[1]);
-          storeKeysAndObject.put(splitString[0],splitString[1]);
-          dos.writeUTF("Done on the client for storing the key "+splitString[0]);
+          System.out.println("Key : "+splitString[1]);
+          System.out.println("Value : "+splitString[2]);
+          storeKeysAndObject.put(splitString[1],splitString[2]);
+          dos.writeUTF("Done on the client for storing the key "+splitString[1]);
+        }
+        else if (received!=null && received.startsWith("GetKey")){
+          System.out.println("AT the slave server RECEIVING THIS "+received+" FROM CLIENT");
+          String[] splitString =received.split(Pattern.quote("$"));
+          System.out.println("Slave Key : "+splitString[1]);
+          String value = (String)storeKeysAndObject.get(splitString[1]);
+          dos.writeUTF("Slave value "+value);
         }
         else {
           dos.writeUTF("Master Invalid input");
